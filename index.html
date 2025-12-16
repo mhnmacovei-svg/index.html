@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registru Camin Cloud</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f9; padding: 15px; text-align: center; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; padding: 15px; border-radius: 8px; width: 100%; font-weight: bold; }
+        .defectiune { background: #fff; border-left: 4px solid #007bff; padding: 10px; margin-top: 10px; text-align: left; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>🛠️ Mentenanță Cămin (Cloud)</h2>
+    <input type="text" id="loc" placeholder="Locație">
+    <textarea id="prob" placeholder="Descrie problema"></textarea>
+    <button onclick="trimite()">Înregistrează</button>
+</div>
+
+<div id="lista-afisata">
+    <h3>Toate problemele raportate:</h3>
+    </div>
+
+<script>
+    // PUNE AICI URL-UL TAU DE LA DEPLOY (Pasul 2.7)
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwvO3SbHIfwII-MTp5xHEckdbTfIjsbRfC_NB3PRvvPPti1s1WAXh2p4WbwLC7AS4NZ/exec';
+
+    function trimite() {
+        const payload = {
+            locatie: document.getElementById('loc').value,
+            problema: document.getElementById('prob').value
+        };
+
+        fetch(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+        .then(() => {
+            alert("Salvat în Google Sheets!");
+            location.reload(); // Reîncărcăm să vedem lista nouă
+        });
+    }
+
+    // Funcție care citește datele din tabel la deschiderea paginii
+    fetch(scriptURL)
+        .then(res => res.json())
+        .then(data => {
+            let container = document.getElementById('lista-afisata');
+            data.reverse().forEach(rand => {
+                container.innerHTML += `
+                    <div class="defectiune">
+                        <small>${new Date(rand[0]).toLocaleString()}</small><br>
+                        <strong>📍 ${rand[1]}</strong>: ${rand[2]}
+                    </div>`;
+            });
+        });
+</script>
+</body>
+</html>
