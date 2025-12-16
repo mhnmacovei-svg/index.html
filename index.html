@@ -3,49 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registru Camin Cloud</title>
+    <title>AdminFix - Mentenanță</title>
     <style>
         body { font-family: sans-serif; background: #f4f4f9; padding: 15px; text-align: center; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        button { background: #007bff; color: white; border: none; padding: 15px; border-radius: 8px; width: 100%; font-weight: bold; }
-        .defectiune { background: #fff; border-left: 4px solid #007bff; padding: 10px; margin-top: 10px; text-align: left; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { background: #007bff; color: white; border: none; padding: 15px; border-radius: 8px; width: 100%; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        button:active { background: #0056b3; }
+        .defectiune { background: #fff; border-left: 4px solid #007bff; padding: 10px; margin-top: 10px; text-align: left; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); max-width: 400px; margin-left: auto; margin-right: auto; }
+        h2 { color: #333; }
+        label { display: block; text-align: left; font-size: 14px; color: #666; margin-left: 5px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>🛠️ Mentenanță Cămin (Cloud)</h2>
-    <input type="text" id="loc" placeholder="Locație">
-    <textarea id="prob" placeholder="Descrie problema"></textarea>
-    <button onclick="trimite()">Înregistrează</button>
+    <h2>🛠️ AdminFix</h2>
+    
+    <label>Numele tău:</label>
+    <input type="text" id="nume" placeholder="Ex: Popescu Ion">
+    
+    <label>Unde s-a stricat?</label>
+    <input type="text" id="loc" placeholder="Ex: Camera 402 / Baie">
+    
+    <label>Ce s-a stricat?</label>
+    <textarea id="prob" rows="3" placeholder="Descrie problema pe scurt..."></textarea>
+    
+    <button id="btnTrimite" onclick="trimite()">Trimite Raportul</button>
 </div>
 
 <div id="lista-afisata">
-    <h3>Toate problemele raportate:</h3>
-    </div>
+    <h3>Istoric Defecțiuni:</h3>
+</div>
 
 <script>
-    // PUNE AICI URL-UL TAU DE LA DEPLOY (Pasul 2.7)
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwvO3SbHIfwII-MTp5xHEckdbTfIjsbRfC_NB3PRvvPPti1s1WAXh2p4WbwLC7AS4NZ/exec';
+    // PUNE AICI NOUL URL DE LA DEPLOY
+    const scriptURL = 'URL_NOU_DE_LA_APPS_SCRIPT';
 
     function trimite() {
+        const btn = document.getElementById('btnTrimite');
+        const nume = document.getElementById('nume').value;
+        const loc = document.getElementById('loc').value;
+        const prob = document.getElementById('prob').value;
+
+        if(!nume || !loc || !prob) {
+            alert("Te rugăm să completezi toate câmpurile!");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Se trimite...";
+
         const payload = {
-            locatie: document.getElementById('loc').value,
-            problema: document.getElementById('prob').value
+            nume: nume,
+            locatie: loc,
+            problema: prob
         };
 
         fetch(scriptURL, {
             method: 'POST',
+            mode: 'no-cors', // Adăugăm asta pentru a evita erorile de tip CORS pe mobil
+            cache: 'no-cache',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         })
         .then(() => {
-            alert("Salvat în Google Sheets!");
-            location.reload(); // Reîncărcăm să vedem lista nouă
+            alert("Raport salvat cu succes!");
+            location.reload();
+        })
+        .catch(error => {
+            alert("Eroare la trimitere. Încearcă din nou.");
+            btn.disabled = false;
+            btn.innerText = "Trimite Raportul";
         });
     }
 
-    // Funcție care citește datele din tabel la deschiderea paginii
+    // Încărcarea listei din tabel
     fetch(scriptURL)
         .then(res => res.json())
         .then(data => {
@@ -53,8 +86,9 @@
             data.reverse().forEach(rand => {
                 container.innerHTML += `
                     <div class="defectiune">
-                        <small>${new Date(rand[0]).toLocaleString()}</small><br>
-                        <strong>📍 ${rand[1]}</strong>: ${rand[2]}
+                        <small style="color: #888;">${new Date(rand[0]).toLocaleString('ro-RO')}</small><br>
+                        <strong>👤 ${rand[1]}</strong><br>
+                        <strong>📍 ${rand[2]}</strong>: ${rand[3]}
                     </div>`;
             });
         });
